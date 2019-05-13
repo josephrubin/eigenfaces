@@ -15,10 +15,7 @@ def eigenfaces(faces):
     """
 
     # Compute the mean.
-    mean = np.zeros(235 * 200).flatten()
-    for face in faces:
-        mean = np.add(mean, face)
-    mean /= len(faces)
+    mean = face_mean(faces)
 
     # Calculate the difference from the mean for each face.
     diffs = []
@@ -36,7 +33,10 @@ def eigenfaces(faces):
     # Compute eigenvalues of (A transpose)(A).
     (eigen_values, eigen_vectors) = np.linalg.eigh(C)
 
-    combined = list(zip(eigen_vectors, eigen_values))
+    # eigen_vectors (matrix) contains one in each column, but iteration
+    # happens, by default, through the rows. So we should transpose
+    # the matrix before continuing.
+    combined = list(zip(eigen_vectors.T, eigen_values))
     combined.sort(key=lambda t: t[1], reverse=True)
     combined_best = combined[0:NUM_EIGENFACES]
     eigen_vectors_best = [t[0] for t in combined_best]
@@ -52,6 +52,15 @@ def eigenfaces(faces):
     return mean, eigen_faces
 
 
+def face_mean(faces):
+    mean = np.zeros(235 * 200).flatten()
+    for face in faces:
+        mean = np.add(mean, face)
+    mean /= len(faces)
+
+    return mean
+
+
 def face_class(mean, basis, faces):
     # Find coords of each normalize face w/r/t
     # the eigenfaces.
@@ -61,11 +70,17 @@ def face_class(mean, basis, faces):
         coords = basis.dot(diff)
 
         # reconstruct.
-        newface = np.matmul(coords, basis)
-        print(newface)
-        vis.display(newface)
+        # newface = np.matmul(coords, basis)
+        # vis.display(diff)
+        # vis.display(newface)
 
         fclass += coords
     fclass /= len(faces)
 
     return fclass
+
+
+def reconstruct(mean, basis, coords):
+    res = np.matmul(coords, basis)
+    res += mean
+    return res

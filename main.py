@@ -17,8 +17,12 @@ def main():
     faces_all = []
     test_faces = []
     for i in range(1, 15 + 1):
-        # Retrieve the images from the disk.
-        images = collect.get_images(i)
+        # Retrieve the cropped images from the disk.
+        images_ = collect.get_images(i)
+        images=[]
+        for i in images_:
+            images.append(modify(i))
+
         #images = images[0:3] + images[4:6] + images[6:]
 
         # Turn the images into vectors.
@@ -32,6 +36,8 @@ def main():
         faces_individual.append(training_faces)
         faces_all.extend(training_faces)
 
+    print("Images loaded.")
+
     # Now, we want to compute the change-of-basis matrix
     # over the entire data set (again, leaving off the first
     # image from each set). This will represent our subspace
@@ -39,10 +45,12 @@ def main():
 
     # Compute eigenfaces.
     mean, eigenfaces = compute.eigenfaces(faces_all)
+    print("Eigenfaces computed.")
 
     # Compute change-of-basis matrix.
     basis = np.stack(eigenfaces)
 
+    # Compute the face classes.
     for individual in faces_individual:
         face_class = compute.face_class(mean, basis, individual)
         face_classes.append(face_class)
@@ -77,7 +85,7 @@ def c(v1, v2):
 
 
 def modify(face):
-    n = ndimage.gaussian_filter(face, random.randint(1, 4))
+    n = (np.roll(face, 3) + np.roll(face, -3)) / 2
     if random.randint(0, 100) == 5:
         vis.display(n)
     return n
