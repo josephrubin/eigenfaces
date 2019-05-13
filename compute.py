@@ -1,13 +1,12 @@
 import numpy as np
-import vis
+
+from const import *
 
 
-# We will pick this many eigenfaces to use, chosen as
-# the eigenfaces corresponding to the highest eigenvalues
-NUM_EIGENFACES = 150
+__author__ = "Joseph, Fernando"
 
 
-def eigenfaces(faces):
+def eigenfaces(faces, num_eigenfaces):
     """ Given a set of face vectors (faces), compute the eigenfaces -
 
     a set of the most important (associated with the highest eigenvalues)
@@ -31,6 +30,8 @@ def eigenfaces(faces):
     C = np.matmul(A.T, A)
 
     # Compute eigenvalues of (A transpose)(A).
+    # Using eigh rather than eig is efficient when working with
+    # a symmetric matrix.
     (eigen_values, eigen_vectors) = np.linalg.eigh(C)
 
     # eigen_vectors (matrix) contains one in each column, but iteration
@@ -38,7 +39,7 @@ def eigenfaces(faces):
     # the matrix before continuing.
     combined = list(zip(eigen_vectors.T, eigen_values))
     combined.sort(key=lambda t: t[1], reverse=True)
-    combined_best = combined[0:NUM_EIGENFACES]
+    combined_best = combined[0:num_eigenfaces]
     eigen_vectors_best = [t[0] for t in combined_best]
 
     # Compute best eigenvectors of (A)(A transpose).
@@ -53,7 +54,7 @@ def eigenfaces(faces):
 
 
 def face_mean(faces):
-    mean = np.zeros(235 * 200).flatten()
+    mean = np.zeros(IMG_SIZE).flatten()
     for face in faces:
         mean = np.add(mean, face)
     mean /= len(faces)
@@ -68,11 +69,6 @@ def face_class(mean, basis, faces):
     for face in faces:
         diff = face - mean
         coords = basis.dot(diff)
-
-        # reconstruct.
-        # newface = np.matmul(coords, basis)
-        # vis.display(diff)
-        # vis.display(newface)
 
         fclass += coords
     fclass /= len(faces)

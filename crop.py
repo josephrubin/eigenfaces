@@ -4,6 +4,9 @@ import os
 import imageio
 
 
+__author__ = "Joseph, Fernando"
+
+
 ASSET_LOCATION_TEMPLATE = "asset" + os.sep + "crop_subject{0:0>2d}"
 
 
