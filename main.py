@@ -1,63 +1,49 @@
 import numpy as np
 import collect
+import compute
+import vis
 import matplotlib.pyplot as plt
 
 def main():
-    # Retrieve the images from the disk.
-    images = collect.get_images(1)
+    face_classes = []
+    for i in range(1, 15 + 1):
+        # Retrieve the images from the disk.
+        images = collect.get_images(i)
 
-    # Crop our images to center the face.
-    images_cropped = [img[5:240, 90:290] for img in images]
+        # Turn the images into vectors.
+        faces = [img.flatten() for img in images]
+
+        # Compute eigenfaces.
+        mean, eigenfaces = compute.eigenfaces(faces)
+
+        # Compute change-of-basis matrix.
+        basis = np.stack(eigenfaces)
+
+        # Compute face class.
+        face_class = compute.face_class(mean, basis, faces)
+
+        face_classes.append(face_class)
+
+    # Retrieve the images from the disk.
+    images = collect.get_images_all()
+    print(len(images))
 
     # Turn the images into vectors.
-    images_vec = [img.flatten() for img in images_cropped]
+    faces = [img.flatten() for img in images]
 
-    # Compute the mean.
-    mean = np.zeros(235 * 200).flatten()
-    for img in images_vec:
-        mean = np.add(mean, img)
+    # Compute eigenfaces.
+    mean, eigenfaces = compute.eigenfaces(faces)
 
-    mean /= len(images_vec)
+    # Compute change-of-basis matrix.
+    basis = np.stack(eigenfaces)
 
-    # Calculate the difference from the mean for each frame.
-    difs = []
-    for img in images_vec:
-        i = img - mean
-        difs.append(i)
+    mface = faces[2]
+    normal_mface = mface - mean
 
-    # Compute A matrix.
-    A = np.column_stack(difs)
-
-    # Compute (A transpose)(A)
-    C = np.matmul(A.T, A)
-
-    # Compute eigenvalues of (A transpose)(A).
-    (values, vectors) = np.linalg.eig(C)
-
-    # Compute best eigenvectors of (A)(A transpose).
-    vectors2 = []
-    for v in vectors:
-        vv = A.dot(v)
-        vvv = vv / np.linalg.norm(vv)
-        vectors2.append(vvv)
-
-    #print(vectors2)
-
-    """
-    vectors3 = [((v * 100) + 200) for v in vectors2]
-    for v in vectors3:
-        v.resize(235, 200)
-        print(v.shape)
-        plt.matshow(v)
-        plt.show()
-    """
-
-    #print(values)
-
-    #mean.resize(235, 200)
-    #print(mean)
-    #plt.matshow(mean)
-    #plt.show()
+    coords = basis.dot(normal_mface)
+    print(basis)
+    print(normal_mface)
+    print(coords)
 
 
 main()
