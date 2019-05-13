@@ -12,32 +12,45 @@ def main():
     # Turn the images into vectors.
     images_vec = [img.flatten() for img in images_cropped]
 
-    # Calculate the difference from the mean for each frame.
+    # Compute the mean.
     mean = np.zeros(235 * 200).flatten()
     for img in images_vec:
         mean = np.add(mean, img)
 
     mean /= len(images_vec)
-    #print(mean)
 
+    # Calculate the difference from the mean for each frame.
     difs = []
     for img in images_vec:
         i = img - mean
         difs.append(i)
 
+    # Compute A matrix.
     A = np.column_stack(difs)
 
+    # Compute (A transpose)(A)
     C = np.matmul(A.T, A)
 
+    # Compute eigenvalues of (A transpose)(A).
     (values, vectors) = np.linalg.eig(C)
 
+    # Compute best eigenvectors of (A)(A transpose).
     vectors2 = []
     for v in vectors:
         vv = A.dot(v)
         vvv = vv / np.linalg.norm(vv)
         vectors2.append(vvv)
 
-    print(vectors2)
+    #print(vectors2)
+
+    """
+    vectors3 = [((v * 100) + 200) for v in vectors2]
+    for v in vectors3:
+        v.resize(235, 200)
+        print(v.shape)
+        plt.matshow(v)
+        plt.show()
+    """
 
     #print(values)
 
