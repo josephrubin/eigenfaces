@@ -1,10 +1,7 @@
 import numpy as np
-from scipy.spatial import distance
-from scipy import ndimage
 import collect
 import compute
 import vis
-import random
 
 def main():
     # First, compute the face classes for each person.
@@ -13,24 +10,28 @@ def main():
     # we would like to use the first image as the
     # "test" for our system at the end.
     face_classes = []
-    faces_individual = []
     faces_all = []
     test_faces = []
     for i in range(1, 15 + 1):
         # Retrieve the images from the disk.
         images = collect.get_images(i)
-        #images = images[0:3] + images[4:6] + images[6:]
 
         # Turn the images into vectors.
         faces = [img.flatten() for img in images]
-
-        # Save the first face from each set for the test.
+        faces_all.extend(faces[1:])
         test_faces.append(faces[0])
 
-        # The rest of the faces will be our training data.
-        training_faces = faces[1:]
-        faces_individual.append(training_faces)
-        faces_all.extend(training_faces)
+        # Compute eigenfaces.
+        mean, eigenfaces = compute.eigenfaces(faces[1:])
+
+        # Compute change-of-basis matrix.
+        basis = np.stack(eigenfaces)
+
+        # Compute face class.
+        face_class = compute.face_class(mean, basis, faces)
+        face_classes.append(face_class)
+
+        print("Face class {} computed.".format(i))
 
     # Now, we want to compute the change-of-basis matrix
     # over the entire data set (again, leaving off the first
@@ -39,48 +40,30 @@ def main():
 
     # Compute eigenfaces.
     mean, eigenfaces = compute.eigenfaces(faces_all)
-
+    
     # Compute change-of-basis matrix.
     basis = np.stack(eigenfaces)
 
-    for individual in faces_individual:
-        face_class = compute.face_class(mean, basis, individual)
-        face_classes.append(face_class)
-
-        print("Face class {} computed.")
-
-    num_right = 0
-    for j, test_face in enumerate(test_faces):
+    for test_face in test_faces:
         print("_________________________")
-        print("test: " + str(j + 1))
+        #print("test_face: " + str(test_face))
         normal_face = test_face - mean
+        #print("normal_face: " + str(normal_face))
         coords = basis.dot(normal_face)
+        #print("coords: " + str(coords))
 
         min_class = None
         min_mag = None
         for i, face_class in enumerate(face_classes):
-            normm = c(face_class, coords)
             diff = face_class - coords
-            mag = normm#np.linalg.norm(diff)
-            #print(mag)
+            mag = np.linalg.norm(diff)
+            print(mag)
             if (min_mag is None or mag < min_mag):
                 min_mag = mag
                 min_class = i
         print("Best class match: " + (str(min_class + 1)))
-        if min_class == j:
-            num_right += 1
-    print("Correct: " + str(num_right))
 
-
-def c(v1, v2):
-    return distance.sqeuclidean(v1, v2)
-
-
-def modify(face):
-    n = ndimage.gaussian_filter(face, random.randint(1, 4))
-    if random.randint(0, 100) == 5:
-        vis.display(n)
-    return n
+    pass
 
 
 main()
