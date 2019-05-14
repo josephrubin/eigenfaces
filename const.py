@@ -21,6 +21,12 @@ NUM_EIGENFACES = 150
 # the test face.
 TEST_FACE_INDEX = 0
 
+# The standard deviation of the Gaussian Blur filter
+# applied to each test image before classification,
+# or 0 for no blur.
+# Empirically, best value is 9.
+BLUR_AMOUNT = 9
+
 # Location of cropped photos relative to source file directory.
 ASSET_LOCATION_TEMPLATE = "asset" + sep + "crop_subject{0:0>2d}"
 

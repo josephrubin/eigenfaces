@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.spatial import distance
+from scipy import ndimage
 
 import collect
 import compute
@@ -61,6 +62,9 @@ def run_trials(test_face_index, num_eigenfaces):
 
     num_right = 0
     for j, test_face in enumerate(test_faces):
+        if BLUR_AMOUNT > 0:
+            test_face = ndimage.gaussian_filter(test_face, BLUR_AMOUNT)
+
         if VERBOSE_MODE:
             print("Trial: " + str(j + 1), end='')
         normal_face = test_face - mean
